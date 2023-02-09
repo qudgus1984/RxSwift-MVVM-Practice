@@ -101,9 +101,26 @@ class ViewController: UIViewController {
     func downloadjson(_ url: String) -> Observable<String?> {
         // 1. 비동기로 생기는 데이터를 Observable로 감싸서 리턴하는 방법
         Observable.create() { emitter in
-            emitter.onNext("Hello")
-            emitter.onNext("Hello")
-            emitter.onCompleted()
+            let url = URL(string: url)!
+            let task = URLSession.shared.dataTask(with: url) { (data, _, err) in
+                guard err == nil else {
+                    emitter.onError(err!)
+                    return
+                }
+                
+                if let dat = data, let json = String(data: dat, encoding: .utf8) {
+                    emitter.onNext(json)
+                }
+                
+                emitter.onCompleted()
+            }
+            
+            task.resume()
+            
+            return Disposables.create() {
+                task.cancel()
+            }
+
             
             return Disposables.create()
         }
@@ -131,8 +148,10 @@ class ViewController: UIViewController {
             .subscribe { event in
                 switch event {
                 case let .next(json):
-                    self.editView.text = json
-                    self.setVisibleWithAnimation(self.activityIndicator, false)
+                    DispatchQueue.main.sync {
+                        self.editView.text = json
+                        self.setVisibleWithAnimation(self.activityIndicator, false)
+                    }
                     
                 case .completed:
                     break
