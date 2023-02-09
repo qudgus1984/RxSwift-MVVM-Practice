@@ -99,25 +99,35 @@ class ViewController: UIViewController {
     // RxSwift
     
     func downloadjson(_ url: String) -> Observable<String?> {
-        return Observable.create { f in
-            DispatchQueue.global().async {
-                let url = URL(string: url)!
-                let data = try! Data(contentsOf: url)
-                let json = String(data: data, encoding: .utf8)
-                
-                DispatchQueue.main.async {
-                    f.onNext(json)
-                }
-            }
+        // 1. 비동기로 생기는 데이터를 Observable로 감싸서 리턴하는 방법
+        Observable.create() { emitter in
+            emitter.onNext("Hello")
+            emitter.onNext("Hello")
+            emitter.onCompleted()
+            
             return Disposables.create()
         }
+        
+//        return Observable.create { f in
+//            DispatchQueue.global().async {
+//                let url = URL(string: url)!
+//                let data = try! Data(contentsOf: url)
+//                let json = String(data: data, encoding: .utf8)
+//
+//                DispatchQueue.main.async {
+//                    f.onNext(json)
+//                }
+//            }
+//            return Disposables.create()
+//        }
     }
     
     @objc func onLoad() {
         editView.text = ""
         setVisibleWithAnimation(activityIndicator, true)
         
-        downloadjson(MEMBER_LIST_URL)
+        // 2. Observable로 오는 데이터를 받아서 처리하는 방법
+        let disposable = downloadjson(MEMBER_LIST_URL)
             .subscribe { event in
                 switch event {
                 case let .next(json):
@@ -130,6 +140,8 @@ class ViewController: UIViewController {
                     break
                 }
         }
+        
+        // disposable.dispose()
     }
 }
 
