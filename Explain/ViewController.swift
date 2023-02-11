@@ -45,9 +45,8 @@ class ViewController: UIViewController {
         
         activityIndicator.contentMode = .scaleToFill
         activityIndicator.style = .medium
-        
-        loadButton.setTitle("LOAD", for: .normal)
-        loadButton.backgroundColor = .black
+        loadButton.setTitle("Minju", for: .normal)
+        loadButton.backgroundColor = .blue
         loadButton.tintColor = .white
         loadButton.addTarget(self, action: #selector(onLoad), for: .touchUpInside)
     }
@@ -150,7 +149,11 @@ class ViewController: UIViewController {
         setVisibleWithAnimation(activityIndicator, true)
         
         // 2. Observable로 오는 데이터를 받아서 처리하는 방법
-        downloadjson(MEMBER_LIST_URL)
+        _ = downloadjson(MEMBER_LIST_URL)
+            .subscribeOn(ConcurrentDispatchQueueScheduler(qos: .default))
+            .map { json in json?.count ?? 0 } // operator
+            .filter { cnt in cnt > 0 } // operator
+            .map { "\($0)" } // operator
             .observeOn(MainScheduler.instance)
             .subscribe(onNext: { json in
                 self.editView.text = json
