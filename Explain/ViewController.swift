@@ -105,7 +105,7 @@ class ViewController: UIViewController {
     // 4. onCompleted / onError
     // 5. Disposed
     
-    func downloadjson(_ url: String) -> Observable<String?> {
+    func downloadjson(_ url: String) -> Observable<String> {
         // 1. 비동기로 생기는 데이터를 Observable로 감싸서 리턴하는 방법
         Observable.create() { emitter in
             let url = URL(string: url)!
@@ -144,22 +144,27 @@ class ViewController: UIViewController {
         //        }
     }
     
+    // Operator은 마블 다이어그램만 이해한다면 찾아서 적재적소에 사용 가능.
     @objc func onLoad() {
         editView.text = ""
         setVisibleWithAnimation(activityIndicator, true)
         
         // 2. Observable로 오는 데이터를 받아서 처리하는 방법
-        _ = downloadjson(MEMBER_LIST_URL)
-            .subscribeOn(ConcurrentDispatchQueueScheduler(qos: .default))
-            .map { json in json?.count ?? 0 } // operator
-            .filter { cnt in cnt > 0 } // operator
-            .map { "\($0)" } // operator
-            .observeOn(MainScheduler.instance)
+        
+        let jsonObservable = downloadjson(MEMBER_LIST_URL)
+        let helloObservable = Observable.just("hello world")
+        
+        Observable.zip(jsonObservable, helloObservable) { $1 + "\n" + $0 } // Observable 합치기
+//        _ = downloadjson(MEMBER_LIST_URL) // just, from
+//            .subscribeOn(ConcurrentDispatchQueueScheduler(qos: .default))
+//            .map { json in json?.count ?? 0 } // operator
+//            .filter { cnt in cnt > 0 } // operator
+//            .map { "\($0)" } // operator
+            .observeOn(MainScheduler.instance) // super : operator
             .subscribe(onNext: { json in
                 self.editView.text = json
                 self.setVisibleWithAnimation(self.activityIndicator, false)
             })
-
     }
 }
 
