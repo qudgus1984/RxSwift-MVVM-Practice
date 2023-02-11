@@ -39,6 +39,8 @@ class ViewController: UIViewController {
     private let editView = UITextView()
     private let activityIndicator = UIActivityIndicatorView()
     
+    var disposeBag = DisposeBag()
+    
     
     func setupAtrribute() {
         timerLabel.font = UIFont.systemFont(ofSize: 20)
@@ -165,6 +167,7 @@ class ViewController: UIViewController {
                 self.editView.text = json
                 self.setVisibleWithAnimation(self.activityIndicator, false)
             })
+            .disposed(by: disposeBag)
     }
 }
 
